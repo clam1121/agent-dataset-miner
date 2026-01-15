@@ -1,0 +1,33 @@
+# 数据集挖掘项目依赖
+
+# PDF处理
+PyMuPDF>=1.23.0
+
+# OpenReview API
+openreview-py>=1.30.0
+
+# OpenAI API
+openai>=1.0.0
+
+# 重试机制
+tenacity>=8.2.0
+
+# HTTP请求
+requests>=2.31.0
+
+# 进度条
+tqdm>=4.66.0
+
+# 数据处理
+pandas>=2.0.0
+
+# HTML解析（用于ACL Anthology）
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
+# 环境变量管理
+python-dotenv>=1.0.0
+
+# 可视化
+matplotlib>=3.7.0
+

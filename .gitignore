@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Output files
+outputs/*.jsonl
+temp/
+*.pdf
+
+# Memory and experiment data
+memory/
+experiments/
+visualizations/
+
+# API Keys (安全起见)
+config.py
+secrets.py
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Large files
+*.zip
+*.tar.gz
+*.rar
