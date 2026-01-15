@@ -186,6 +186,26 @@ class ReflectionEngine:
 
         return reflection_data
 
+    def _truncate_large_fields(self, data: Dict[str, Any], max_length: int = 1000) -> Dict[str, Any]:
+        """截断字典中过长的文本字段，避免 token 浪费"""
+        truncated = {}
+        for key, value in data.items():
+            if isinstance(value, str) and len(value) > max_length:
+                # 截断长文本，保留前后部分
+                half = max_length // 2
+                truncated[key] = f"{value[:half]}...[截断{len(value)-max_length}字符]...{value[-half:]}"
+            elif isinstance(value, dict):
+                truncated[key] = self._truncate_large_fields(value, max_length)
+            elif isinstance(value, list):
+                # 只截断列表中的字符串元素
+                truncated[key] = [
+                    f"{item[:max_length]}...[截断]" if isinstance(item, str) and len(item) > max_length else item
+                    for item in value
+                ]
+            else:
+                truncated[key] = value
+        return truncated
+
     def _build_llm_reflection_prompt(
         self,
         action: Action,
@@ -201,6 +221,10 @@ class ReflectionEngine:
             recent = history[-3:]
             history_summary = "\n".join([f"- {exp.summary()}" for exp in recent])
 
+        # 截断过长的参数和上下文，避免 token 浪费
+        truncated_params = self._truncate_large_fields(action.params, max_length=1000)
+        truncated_context = self._truncate_large_fields(context, max_length=1000)
+
         prompt = f"""
 你是一个智能 Agent 的反思引擎。请对以下动作执行进行深度反思。
 
@@ -211,7 +235,7 @@ class ReflectionEngine:
 ## 执行的动作
 动作类型: {action.action_type.value}
 执行推理: {action.reasoning}
-参数: {json.dumps(action.params, ensure_ascii=False)}
+参数（已截断长文本）: {json.dumps(truncated_params, ensure_ascii=False)}
 
 ## 执行结果
 成功: {result.success}
@@ -219,8 +243,8 @@ class ReflectionEngine:
 执行时间: {result.execution_time:.2f}秒
 错误信息: {result.error_message or '无'}
 
-## 上下文
-{json.dumps(context, ensure_ascii=False, indent=2)}
+## 上下文（已截断长文本）
+{json.dumps(truncated_context, ensure_ascii=False, indent=2)}
 
 ## 最近的历史
 {history_summary if history_summary else '无历史记录'}

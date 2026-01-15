@@ -276,6 +276,30 @@ class MemorySystem:
         except Exception as e:
             logger.warning(f"加载长期记忆失败: {str(e)}")
 
+    def _clean_experience_for_storage(self, experience: Experience) -> Experience:
+        """
+        清理经验对象中的大文本字段，避免存储时占用过多空间
+
+        Args:
+            experience: 原始经验对象
+
+        Returns:
+            清理后的经验对象
+        """
+        import copy
+        cleaned = copy.deepcopy(experience)
+
+        # 清理 action.params 中的大文本字段
+        if hasattr(cleaned.action, 'params') and isinstance(cleaned.action.params, dict):
+            for key in ['text', 'summary_text', 'content']:
+                if key in cleaned.action.params and isinstance(cleaned.action.params[key], str):
+                    text = cleaned.action.params[key]
+                    if len(text) > 500:
+                        # 只保留前后各200字符
+                        cleaned.action.params[key] = f"{text[:200]}...[省略{len(text)-400}字]...{text[-200:]}"
+
+        return cleaned
+
     def _store_to_long_term(self, experience: Experience):
         """
         将经验存入长期记忆
@@ -286,7 +310,10 @@ class MemorySystem:
         pattern = experience.pattern or self._create_pattern(
             experience.action.action_type.value, {}
         )
-        self.long_term[pattern].append(experience)
+
+        # 清理大文本字段后再存储
+        cleaned_experience = self._clean_experience_for_storage(experience)
+        self.long_term[pattern].append(cleaned_experience)
         logger.info(f"已将经验存入长期记忆，模式: {pattern}")
 
         # 定期持久化

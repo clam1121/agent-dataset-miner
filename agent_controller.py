@@ -392,6 +392,10 @@ class AgentController:
                 logger.warning(
                     f"已达到最大重试次数 ({self.max_retries})，跳过此步骤"
                 )
+                # 清除重试标志，让主循环前进到下一步
+                reflection.needs_retry = False
+                # 重置该步骤的重试计数
+                self.retry_count[retry_key] = 0
                 # 继续执行下一步
                 return True
 
